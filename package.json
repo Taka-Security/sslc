@@ -1,6 +1,6 @@
 {
   "name": "sslc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "bin": "index.js",
   "description": "cli tool to check Solidity struct memory layout for inefficiencies",
   "keywords": [
@@ -22,7 +22,7 @@
   "bugs": {
     "url": "https://github.com/rmi7/sslc/issues"
   },
-  "license": "MIT", 
+  "license": "MIT",
   "author": "Alexander 'rmi7' Remie",
   "dependencies": {
     "argparse": "^1.0.10",
