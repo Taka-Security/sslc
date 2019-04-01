@@ -44,8 +44,7 @@ sslc -f ~/my-solidity-project/contracts/*.sol
 The output will be a single Solidity file printed to stdout. Example output:
 
 ```Solidity
-// solidity file: /some/path/SomeContract.sol
-struct Mystruct {
+struct Mystruct { // solidity file: SomeContract.sol
 
   uint8 myFirstVar; // bytes: 1
   //---------- end of slot 1 | bytes in: 1 | bytes left: 31
