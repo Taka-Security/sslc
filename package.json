@@ -1,0 +1,31 @@
+{
+  "name": "sslc",
+  "version": "0.1.0",
+  "bin": "index.js",
+  "description": "cli tool to check Solidity struct memory layout for inefficiencies",
+  "keywords": [
+    "memory",
+    "solidity",
+    "ethereum",
+    "layout",
+    "storage",
+    "contract",
+    "cli",
+    "struct",
+    "efficient"
+  ],
+  "homepage": "https://github.com/rmi7/sslc",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rmi7/sslc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rmi7/sslc/issues"
+  },
+  "license": "MIT", 
+  "author": "Alexander 'rmi7' Remie",
+  "dependencies": {
+    "argparse": "^1.0.10",
+    "solidity-parser-antlr": "^0.4.2"
+  }
+}
