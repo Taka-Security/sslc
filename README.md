@@ -88,7 +88,7 @@ struct MyStruct {
 }
 ```
 
-#### Assumed-to-be-most-efficient file by current algorithm
+#### Assumed-to-be-most-efficient stuct member layout by current algorithm
 
 ```Solidity
 struct MyStruct {
