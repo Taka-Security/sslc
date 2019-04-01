@@ -56,6 +56,17 @@ const calcStructStorageSlotCount = (structMembers) => {
   return bestSlotCount;
 };
 
+// source: https://stackoverflow.com/a/1917041
+const sharedStart = (array) => {
+  let A = array.concat().sort(), 
+      a1 = A[0],
+      a2 = A[A.length-1],
+      L = a1.length, 
+      i = 0;
+  while (i < L && a1.charAt(i) === a2.charAt(i)) i++;
+  return a1.substring(0, i);
+};
+
 const argParser = new ArgumentParser({
   version: '0.0.1',
   addHelp: true,
@@ -69,7 +80,7 @@ argParser.addArgument(
     required: true,
     metavar: 'path',
     help: 'input solidity file(s), supports glob',
-    dest: 'input_files',
+    dest: 'input_file_paths',
   },
 );
 
@@ -86,13 +97,16 @@ argParser.addArgument(
 
 const args = argParser.parseArgs();
 
+const sharedPath = sharedStart(args.input_file_paths);
+
 const summary_can_be_more_efficient = {};
 
 try {
-  args.input_files.forEach((input_file) => {    
+  args.input_file_paths.forEach((input_file_path) => {    
+    const unique_file_name = input_file_path.replace(sharedPath, '');
     const results = {};
 
-    const input = fs.readFileSync(input_file, 'utf8');
+    const input = fs.readFileSync(input_file_path, 'utf8');
     const ast = solidityParser.parse(input, { loc: true });
 
     const structs = args.only_last_contract
@@ -208,8 +222,7 @@ try {
     });
     
     Object.keys(results).forEach((structName) => {
-      console.log(`\n// solidity file: ${input_file}`);
-      console.log(`struct ${structName} {\n`);
+      console.log(`struct ${structName} { // solidity file: ${unique_file_name}\n`);
       let slotCount = 1;
       let storageSlotByteCount = 0;
       results[structName].forEach((targetMember) => {
@@ -224,7 +237,7 @@ try {
       });
       
       const optimizedSlotCount = calcStructStorageSlotCount(results[structName].sort((a, b) => a.varByteSize - b.varByteSize));
-      summary_can_be_more_efficient[input_file] = { [structName]: { current: slotCount, optimized: optimizedSlotCount } };
+      summary_can_be_more_efficient[unique_file_name] = { [structName]: { current: slotCount, optimized: optimizedSlotCount } };
       console.log('  //' + '-'.repeat(10) + ` end of slot ${slotCount} | bytes in: ${storageSlotByteCount} | bytes left: ${32 - storageSlotByteCount}`);
       console.log(`\n} // current slot count = ${slotCount} | optimized slot count = ${optimizedSlotCount}\n`);
     });
