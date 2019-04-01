@@ -29,14 +29,14 @@ Optional arguments:
 #### without install
 
 ```
-npx sslc ~/my-solidity-project/contracts/*.sol
+npx sslc -f ~/my-solidity-project/contracts/*.sol
 ```
 
 #### with install
 
 ```
 npm i -g sslc
-sslc ~/my-solidity-project/contracts/*.sol
+sslc -f ~/my-solidity-project/contracts/*.sol
 ```
 
 ## Output
