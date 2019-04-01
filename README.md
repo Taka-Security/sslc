@@ -44,7 +44,17 @@ sslc -f ~/my-solidity-project/contracts/*.sol
 The output will be a single Solidity file printed to stdout. Example output:
 
 ```Solidity
-struct Mystruct { // solidity file: SomeContract.sol
+struct MyFirstStruct { // solidity file: SomeContract.sol
+
+  uint256 myFirstVar; // bytes: 256
+  //---------- end of slot 1 | bytes in: 32 | bytes left: 0
+  
+  address mySecondVar; // bytes: 20
+  //---------- end of slot 2 | bytes in: 20 | bytes left: 12
+ 
+} // current slot count = 2 | optimized slot count = 2
+
+struct MySecondStruct { // solidity file: SomeContract.sol
 
   uint8 myFirstVar; // bytes: 1
   //---------- end of slot 1 | bytes in: 1 | bytes left: 31
@@ -59,7 +69,7 @@ struct Mystruct { // solidity file: SomeContract.sol
 
 // STRUCTS THAT CAN BE OPTIMIZED
 // =============================
-// file: /some/path/SomeContract.sol
+// file: SomeContract.sol
 // current num storage slots: 3
 // possible num storage slots: 2
 // -----------------------------
