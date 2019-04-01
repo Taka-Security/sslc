@@ -9,18 +9,51 @@ const uintRegex = /uint(\d+)/m;
 const intRegex = /int(\d+)/m;
 const bytesRegex = /bytes(\d+)/m;
 
-const calcStructStorageSlotCount = (structMembers) => {
-  let slotCount = 1;
-  let storageSlotByteCount = 0;
-  structMembers.forEach((targetMember) => {
-    if (targetMember.varByteSize + storageSlotByteCount > 32) {
-      storageSlotByteCount = targetMember.varByteSize;        
-      slotCount += 1;
+// source: https://stackoverflow.com/a/37580979
+const genPermutations = (permutation) => {
+  var length = permutation.length,
+      result = [permutation.slice()],
+      c = new Array(length).fill(0),
+      i = 1, k, p;
+
+  while (i < length) {
+    if (c[i] < i) {
+      k = i % 2 && c[i];
+      p = permutation[i];
+      permutation[i] = permutation[k];
+      permutation[k] = p;
+      ++c[i];
+      i = 1;
+      result.push(permutation.slice());
     } else {
-      storageSlotByteCount += targetMember.varByteSize;
+      c[i] = 0;
+      ++i;
     }
+  }
+  return result;
+};
+
+const calcStructStorageSlotCount = (structMembers) => {
+  const allPermutations = genPermutations(structMembers);
+  let bestSlotCount = 99;
+  
+  // go through all permutations of struct members
+  allPermutations.forEach((structMembersCandidate) => {
+    let slotCount = 1;
+    let storageSlotByteCount = 0;
+    structMembersCandidate.forEach((targetMember) => {
+      if (slotCount >= bestSlotCount) return;
+      if (targetMember.varByteSize + storageSlotByteCount > 32) {
+        storageSlotByteCount = targetMember.varByteSize;        
+        slotCount += 1;
+      } else {
+        storageSlotByteCount += targetMember.varByteSize;
+      }
+    });
+    if (slotCount < bestSlotCount) bestSlotCount = slotCount;
   });
-  return slotCount;
+  
+  return bestSlotCount;
 };
 
 const argParser = new ArgumentParser({

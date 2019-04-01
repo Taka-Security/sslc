@@ -68,45 +68,9 @@ struct Mystruct {
 
 ## TODO
 
-### Optimized memory layout algorithm
+### Optimize memory layout algorithm
 
-The current algorithm to calculate the most efficient memory layout simply sorts all member variables based on byte size ascending, and checks how much storage slots this layout occupies. There is room for improvement here as this sometimes leads to not the most efficient layout. As shown in the following sample.
-
-#### Actual file
-
-```Solidity
-struct MyStruct {
-  uint32 var1; // bytes: 4
-  uint88 var2; // bytes: 11
-  uint88 var3; // bytes: 11
-  //---------- end of slot 1 | bytes in: 26 | bytes left: 6
-
-  uint88 var4; // bytes: 11
-  uint88 var5; // bytes: 11
-  uint64 var6; // bytes: 8
-  //---------- end of slot 2 | bytes in: 30 | bytes left: 2
-}
-```
-
-#### Assumed-to-be-most-efficient file by current algorithm
-
-```Solidity
-struct MyStruct {
-  uint32 var1; // bytes: 4
-  uint64 var6; // bytes: 8
-  uint88 var2; // bytes: 11
-  //---------- end of slot 1 | bytes in: 23 | bytes left: 9
-  
-  uint88 var3; // bytes: 11
-  uint88 var4; // bytes: 11
-  //---------- end of slot 2 | bytes in: 22 | bytes left: 10
-
-  uint88 var5; // bytes: 11
-  //---------- end of slot 3 | bytes in: 11 | bytes left: 21
-}
-```
-
-The current algorithm's most efficient layout takes one more storage slot than the actual struct layout.
+The current algorithm to calculate the most efficient memory layout simply checks all permutations of the struct members, i.e. brute forcing. There are ways to optimize this and not check every single permutations, e.g. if two members are uint256, there is no need to check the case where these two members are in mirrored positions.
 
 ## License
 
