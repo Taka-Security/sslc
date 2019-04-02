@@ -11,12 +11,12 @@ const intRegex = /int(\d+)/m;
 const bytesRegex = /bytes(\d+)/m;
 
 // source: https://stackoverflow.com/a/37580979
-const genPermutations = (permutation) => {
+function* genPermutations(permutation) {
   var length = permutation.length,
-      result = [permutation.slice()],
-      c = new Array(length).fill(0),
+      c = Array(length).fill(0),
       i = 1, k, p;
 
+  yield permutation.slice();
   while (i < length) {
     if (c[i] < i) {
       k = i % 2 && c[i];
@@ -25,13 +25,12 @@ const genPermutations = (permutation) => {
       permutation[k] = p;
       ++c[i];
       i = 1;
-      result.push(permutation.slice());
+      yield permutation.slice();
     } else {
       c[i] = 0;
       ++i;
     }
   }
-  return result;
 };
 
 // source: https://stackoverflow.com/a/1917041
@@ -47,26 +46,27 @@ const sharedStart = (array) => {
   return a1.substring(0, i);
 };
 
+// The most efficient memory layout of `n` struct variables is calculated using brute-force. 
+// The `n` variable is likely to be below 15.
+// Due to low `n` brute-forcing is most efficient time-wise.
 const calcStructStorageSlotCount = (structMembers) => {
-  const allPermutations = genPermutations(structMembers);
+  const byteSizesList = structMembers.map(m => m.varByteSize); // we are only interested in the combinations of variable byte sizes
   let bestSlotCount = 99;
-  
-  // go through all permutations of struct members
-  allPermutations.forEach((structMembersCandidate) => {
-    let slotCount = 1;
-    let storageSlotByteCount = 0;
-    structMembersCandidate.forEach((targetMember) => {
-      if (slotCount >= bestSlotCount) return;
-      if (targetMember.varByteSize + storageSlotByteCount > 32) {
-        storageSlotByteCount = targetMember.varByteSize;        
+  for (const perm of genPermutations(byteSizesList)) { // uses yield
+    let slotCount = 1; // to keep track of how many storage slots the current permutation is occupying
+    let slotBytesUsed = 0; // how many bytes are occupied by data, max in 1 storage slot = 32
+    for (let i = 0, len = perm.length; i < len; i += 1) { // loop items of permutation
+      if (slotCount >= bestSlotCount) break; // this permutiation is already not the best, goto next permutation
+      const varByteSize = perm[i];
+      if (slotBytesUsed + varByteSize > 32) { // new variable cannot be saved in current storage slot, we need a new one.
+        slotBytesUsed = varByteSize;       
         slotCount += 1;
-      } else {
-        storageSlotByteCount += targetMember.varByteSize;
+      } else { // new variable can be packed inside the current storage variable. no need for extra storage slot
+        slotBytesUsed += varByteSize;
       }
-    });
+    }
     if (slotCount < bestSlotCount) bestSlotCount = slotCount;
-  });
-  
+  }
   return bestSlotCount;
 };
 
