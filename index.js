@@ -34,7 +34,7 @@ function* genPermutations(permutation) {
 };
 
 // source: https://stackoverflow.com/a/1917041
-const sharedStart = (array) => {
+function extractSharedStart(array) {
   // NOTE: if only 1 file, set shared as everything except file name
   if (array.length === 1) return array[0].replace(path.basename(array[0]), '');
   let A = array.concat().sort(), 
@@ -46,13 +46,63 @@ const sharedStart = (array) => {
   return a1.substring(0, i);
 };
 
-// The most efficient memory layout of `n` struct variables is calculated using brute-force. 
-// The `n` variable is likely to be below 15.
-// Due to low `n` brute-forcing is most efficient time-wise.
-const calcStructStorageSlotCount = (structMembers) => {
+
+// source: https://gist.github.com/tpae/72e1c54471e88b689f85ad2b3940a8f0
+class TrieNode {
+  constructor(key) {
+    this.key = key; // the "key" value will be the character in sequence
+    this.parent = null; // we keep a reference to parent
+    this.children = {}; // we have hash of children
+    this.end = false; // check to see if the node is at the end
+  }
+  getWord() { // iterates through the parents to get the word. time complexity: O(k), k = word length
+    const output = [];
+    let node = this;
+    while (node !== null) {
+      output.unshift(node.key);
+      node = node.parent;
+    }
+    return output.join('');
+  }
+}
+class Trie {
+  constructor() {
+    this.root = new TrieNode(null); // we implement Trie with just a simple root with null value.
+  }
+  insert(word) {  // inserts a word into the trie. time complexity: O(k), k = word length
+    let node = this.root; // we start at the root 😬
+    for (var i = 0; i < word.length; i++) { // for every character in the word
+      if (!node.children[word[i]]) { // check to see if character node exists in children.
+        node.children[word[i]] = new TrieNode(word[i]); // if it doesn't exist, we then create it.
+        node.children[word[i]].parent = node; // we also assign the parent to the child node.
+      }
+      node = node.children[word[i]]; // proceed to the next depth in the trie.
+      if (i == word.length-1) { // finally, we check to see if it's the last word.
+        node.end = true; // if it is, we set the end flag to true.
+      }
+    }
+  }
+  contains(word) { // check if it contains a whole word. time complexity: O(k), k = word length
+    let node = this.root;
+    for(var i = 0; i < word.length; i++) { // for every character in the word
+      if (node.children[word[i]]) { // check to see if character node exists in children.
+        node = node.children[word[i]]; // if it exists, proceed to the next depth of the trie.
+      } else { // doesn't exist, return false since it's not a valid word.        
+        return false;
+      }
+    }
+    return node.end; // we finished going through all the words, but is it a whole word?
+  }
+}
+
+function calcStructStorageSlotCount(structMembers) {
   const byteSizesList = structMembers.map(m => m.varByteSize); // we are only interested in the combinations of variable byte sizes
+  const byteSizesListNoBytes32 = byteSizesList.filter(b => b < 32); // we remove 32 byte vars from the list to check
+  const trie = new Trie();
   let bestSlotCount = 99;
-  for (const perm of genPermutations(byteSizesList)) { // uses yield
+  for (const perm of genPermutations(byteSizesListNoBytes32)) { // uses yield
+    if (trie.contains(perm)) continue; // ignore already visited permutations
+    trie.insert(perm); 
     let slotCount = 1; // to keep track of how many storage slots the current permutation is occupying
     let slotBytesUsed = 0; // how many bytes are occupied by data, max in 1 storage slot = 32
     for (let i = 0, len = perm.length; i < len; i += 1) { // loop items of permutation
@@ -67,11 +117,12 @@ const calcStructStorageSlotCount = (structMembers) => {
     }
     if (slotCount < bestSlotCount) bestSlotCount = slotCount;
   }
-  return bestSlotCount;
+  const byteSizesListBytes32Count = byteSizesList.length - byteSizesListNoBytes32.length;
+  return bestSlotCount + byteSizesListBytes32Count;
 };
 
 
-const gatherCliArgs = () => {
+function gatherCliArgs() {
   const argParser = new ArgumentParser({
     version: '0.0.1',
     addHelp: true,
@@ -103,16 +154,13 @@ const gatherCliArgs = () => {
   return argParser.parseArgs();
 };
 
-const exec = (args) => {
-  const sharedPath = sharedStart(args.input_file_paths);
-  
-  const summary_can_be_more_efficient = {};
+function exec(args) {
+  const sharedPath = extractSharedStart(args.input_file_paths);
+  const inefficientStructs = {};
 
   try {
     args.input_file_paths.forEach((input_file_path) => {    
-      const unique_file_name = input_file_path.replace(sharedPath, '');
-      const results = {};
-
+      const uniqueFileName = input_file_path.replace(sharedPath, '');
       const input = fs.readFileSync(input_file_path, 'utf8');
       const ast = solidityParser.parse(input, { loc: true });
       
@@ -122,118 +170,66 @@ const exec = (args) => {
                       .map(child => child.subNodes.filter(n => n.type === 'StructDefinition').map(n => ({ contract: child.name, ...n })))
                       .flat();
       
-      structs.forEach((targetStruct) => {
-        const structResult = [];
-        targetStruct.members.forEach((targetMember) => {
+      const parsedStructs = structs.reduce((memo, targetStruct) => {
+        const structMembers = targetStruct.members.map((targetMember) => {
+          const varName = targetMember.name;
+          const varLine = targetMember.loc.start.line - 1;
+          let varKind;
+          let varType;
+          let varByteSize;
           switch (targetMember.typeName.type) {
             case 'Mapping':
-              structResult.push({
-                varName: targetMember.name,
-                varKind: 'mapping',
-                varByteSize: 32,
-                varLine: targetMember.loc.start.line - 1,
-              });
-              return;
+              varKind = 'mapping';
+              varByteSize = 32;
+              break;
             case 'ArrayTypeName':
-              structResult.push({
-                varName: targetMember.name,
-                varKind: 'array',
-                varByteSize: 32,
-                varLine: targetMember.loc.start.line - 1,
-              });
-              return;
-            case 'ElementaryTypeName':
+              varKind = 'array';
+              varByteSize = 32;
+              break;
+            case 'ElementaryTypeName': {
               let targetMemberType = targetMember.typeName.name;
-              
-              if (targetMemberType.startsWith('int')) {
-                if (targetMemberType === 'int') targetMemberType = 'int256';
-                structResult.push({
-                  varName: targetMember.name,
-                  varType: targetMemberType,
-                  varKind: 'elementary',
-                  varByteSize: parseInt(targetMemberType.match(intRegex)[1], 10) / 8,
-                  varLine: targetMember.loc.start.line - 1,
-                });
-                return;
+              varKind = 'elementary';
+              varType = targetMemberType;            
+              switch (targetMemberType) {
+                case 'bytes': varKind = 'array'; varByteSize = 32; break; // NOTE: dynamic size..
+                case 'string': varKind = 'array'; varByteSize = 32; break; // NOTE: dynamic size..
+                case 'bool': varByteSize = 1; break;
+                case 'address': varByteSize = 20; break;
+                default:
+                  if (targetMemberType === 'int' || targetMemberType === 'uint') targetMemberType += '256';
+                  if (targetMemberType.startsWith('int')) { // intX
+                    varByteSize = parseInt(targetMemberType.match(intRegex)[1], 10) / 8;
+                    break;
+                  }
+                  if (targetMemberType.startsWith('uint')) { // uintX
+                    varByteSize = parseInt(targetMemberType.match(uintRegex)[1], 10) / 8;
+                    break;
+                  }
+                  if (targetMemberType.startsWith('bytes')) { // bytesX
+                    varByteSize = parseInt(targetMemberType.match(bytesRegex)[1], 10);
+                    break;
+                  }                  
+                  throw new Error('unknown type', targetMemberType);
               }
-              
-              if (targetMemberType.startsWith('uint')) {
-                if (targetMemberType === 'uint') targetMemberType = 'uint256';
-                structResult.push({
-                  varName: targetMember.name,
-                  varType: targetMemberType,
-                  varKind: 'elementary',
-                  varByteSize: parseInt(targetMemberType.match(uintRegex)[1], 10) / 8,
-                  varLine: targetMember.loc.start.line - 1,
-                });
-                return;
-              }
-              
-              if (targetMemberType === 'bytes') {
-                structResult.push({
-                  varName: targetMember.name,
-                  varType: targetMemberType,
-                  varKind: 'elementary', // it's really a dynamic array
-                  varByteSize: 32,
-                  varLine: targetMember.loc.start.line - 1,
-                });
-                return;  
-              }
-              
-              if (targetMemberType.startsWith('bytes')) {
-                structResult.push({
-                  varName: targetMember.name,
-                  varType: targetMemberType,
-                  varKind: 'elementary',
-                  varByteSize: parseInt(targetMemberType.match(bytesRegex)[1], 10),
-                  varLine: targetMember.loc.start.line - 1,
-                });
-                return;
-              }
-              
-              if (targetMemberType === 'string') {
-                structResult.push({
-                  varName: targetMember.name,
-                  varType: targetMemberType,
-                  varKind: 'elementary', // it's really a dynamic array
-                  varByteSize: 32,
-                  varLine: targetMember.loc.start.line - 1,
-                });
-                return;  
-              }
-              
-              if (targetMemberType === 'bool') {
-                structResult.push({
-                  varName: targetMember.name,
-                  varType: targetMemberType,
-                  varKind: 'elementary', // it's really a dynamic array
-                  varByteSize: 1,
-                  varLine: targetMember.loc.start.line - 1,
-                });
-                return;  
-              }
-              
-              if (targetMemberType === 'address') {
-                structResult.push({
-                  varName: targetMember.name,
-                  varType: targetMemberType,
-                  varKind: 'elementary',
-                  varByteSize: 20,
-                  varLine: targetMember.loc.start.line - 1,
-                });
-                return;  
-              }
+            }
           }
+          return { varKind, varByteSize, varType, varLine };
         });
-        results[targetStruct.contract] = { [targetStruct.name]: structResult, ...results[targetStruct.contract] };
-      });
+        return {
+          ...memo,
+          [targetStruct.contract]: { 
+            ...(memo[targetStruct.contract] || {}),
+            [targetStruct.name]: structMembers
+          }
+        };
+      }, {});
       
-      Object.keys(results).forEach((contractName) => {
-        Object.keys(results[contractName]).forEach((structName) => {
-          console.log(`struct ${structName} { // file: ${unique_file_name} | contract: ${contractName}\n`);
+      Object.keys(parsedStructs).forEach((contractName) => {
+        Object.keys(parsedStructs[contractName]).forEach((structName) => {
+          console.log(`struct ${structName} { // file: ${uniqueFileName} | contract: ${contractName}\n`);
           let slotCount = 1;
           let storageSlotByteCount = 0;
-          results[contractName][structName].forEach((targetMember) => {
+          parsedStructs[contractName][structName].forEach((targetMember) => {
             if (targetMember.varByteSize + storageSlotByteCount > 32) {
               console.log('  //' + '-'.repeat(10) + ` end of slot ${slotCount} | bytes taken: ${storageSlotByteCount} | bytes free: ${32 - storageSlotByteCount}\n`);
               storageSlotByteCount = targetMember.varByteSize;        
@@ -244,11 +240,11 @@ const exec = (args) => {
             console.log(`  ${input.split('\n')[targetMember.varLine].replace(/\/\/.+/, '').trim()} // bytes: ${targetMember.varByteSize}`);
           });
           
-          const optimizedSlotCount = calcStructStorageSlotCount(results[contractName][structName].slice().sort((a, b) => a.varByteSize - b.varByteSize));
-          summary_can_be_more_efficient[unique_file_name] = { 
-            ...summary_can_be_more_efficient[unique_file_name],
+          const optimizedSlotCount = calcStructStorageSlotCount(parsedStructs[contractName][structName].slice().sort((a, b) => a.varByteSize - b.varByteSize));
+          inefficientStructs[uniqueFileName] = { 
+            ...inefficientStructs[uniqueFileName],
             [contractName]: { 
-              ...(summary_can_be_more_efficient[unique_file_name] ? summary_can_be_more_efficient[unique_file_name][contractName] : {}),
+              ...(inefficientStructs[uniqueFileName] ? inefficientStructs[uniqueFileName][contractName] : {}),
               [structName]: { current: slotCount, optimized: optimizedSlotCount } 
             },
           };
@@ -261,10 +257,10 @@ const exec = (args) => {
     console.log('// STRUCTS THAT CAN BE OPTIMIZED');
     console.log('// =============================');
     let foundStructThatCanBeOptimized = false;
-    Object.keys(summary_can_be_more_efficient).forEach((inputFilePath) => {
-      Object.keys(summary_can_be_more_efficient[inputFilePath]).forEach((contractName) => {
-        Object.keys(summary_can_be_more_efficient[inputFilePath][contractName]).forEach((structName) => {
-          const structSummary = summary_can_be_more_efficient[inputFilePath][contractName][structName];
+    Object.keys(inefficientStructs).forEach((inputFilePath) => {
+      Object.keys(inefficientStructs[inputFilePath]).forEach((contractName) => {
+        Object.keys(inefficientStructs[inputFilePath][contractName]).forEach((structName) => {
+          const structSummary = inefficientStructs[inputFilePath][contractName][structName];
           if (structSummary.current > structSummary.optimized) {
             if (!foundStructThatCanBeOptimized) {
               foundStructThatCanBeOptimized = true;
