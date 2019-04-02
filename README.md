@@ -44,32 +44,59 @@ sslc -f ~/my-solidity-project/contracts/*.sol
 The output will be a single Solidity file printed to stdout. Example output:
 
 ```Solidity
-struct MyFirstStruct { // solidity file: SomeContract.sol
-
-  uint256 myFirstVar; // bytes: 256
-  //---------- end of slot 1 | bytes in: 32 | bytes left: 0
-  
-  address mySecondVar; // bytes: 20
-  //---------- end of slot 2 | bytes in: 20 | bytes left: 12
- 
-} // current slot count = 2 | optimized slot count = 2
-
-struct MySecondStruct { // solidity file: SomeContract.sol
+struct MyFirstStruct { // file: SomeContract.sol | contract: SomeContract
 
   uint8 myFirstVar; // bytes: 1
-  //---------- end of slot 1 | bytes in: 1 | bytes left: 31
+  //---------- end of slot 1 | bytes taken: 1 | bytes free: 31
+  
+  bytes32[] mySecondVar; // bytes: 32
+  //---------- end of slot 2 | bytes taken: 32 | bytes free: 0
+  
+  bool myThirdVar; // bytes: 1
+  //---------- end of slot 3 | bytes taken: 1 | bytes free: 31
+  
+  uint256 myFourthVar; // bytes: 32
+  //---------- end of slot 4 | bytes taken: 32 | bytes free: 0
+  
+  bool myFourthVar; // bytes: 1
+  //---------- end of slot 5 | bytes taken: 1 | bytes free: 31
+ 
+} // current slot count = 5 | optimized slot count = 3
+
+struct MyParentStruct { // file: SomeOtherContract.sol | contract: ParentContract
+
+  uint8 myFirstVar; // bytes: 1
+  //---------- end of slot 1 | bytes taken: 1 | bytes free: 31
   
   uint256 mySecondVar; // bytes: 32
-  //---------- end of slot 2 | bytes in: 32 | bytes left: 0
+  //---------- end of slot 2 | bytes taken: 32 | bytes free: 0
   
   uint16 myThirdVar; // bytes: 2
-  //---------- end of slot 3 | bytes in: 2 | bytes left: 30
+  //---------- end of slot 3 | bytes taken: 2 | bytes free: 30
   
 } // current slot count = 3 | optimized slot count = 2
+
+struct MyOtherStruct { // file: SomeOtherContract.sol | contract: SomeOtherContract
+
+  uint256 myFirstVar; // bytes: 32
+  //---------- end of slot 1 | bytes taken: 32 | bytes free: 0
+  
+  address mySecondVar; // bytes: 20
+  //---------- end of slot 2 | bytes taken: 20 | bytes free: 12
+ 
+} // current slot count = 2 | optimized slot count = 2
 
 // STRUCTS THAT CAN BE OPTIMIZED
 // =============================
 // file: SomeContract.sol
+// contract: SomeContract
+// struct: MyFirstStruct
+// current num storage slots: 5
+// possible num storage slots: 3
+// -----------------------------
+// file: SomeOtherContract.sol
+// contract: ParentContract
+// struct: MyParentStruct
 // current num storage slots: 3
 // possible num storage slots: 2
 // -----------------------------
@@ -78,12 +105,6 @@ struct MySecondStruct { // solidity file: SomeContract.sol
 ## Test
 
 `npm test`
-
-## TODO
-
-### Optimize memory layout algorithm
-
-The current algorithm to calculate the most efficient memory layout simply checks all permutations of the struct members, i.e. brute forcing. There are ways to optimize this and not check every single permutations, e.g. if two members are uint256, there is no need to check the case where these two members are in mirrored positions.
 
 ## License
 

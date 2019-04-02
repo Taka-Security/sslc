@@ -1,13 +1,13 @@
 struct StructA { // file: Test2.sol | contract: A
 
   uint8 var1; // bytes: 1
-  //---------- end of slot 1 | bytes in: 1 | bytes left: 31
+  //---------- end of slot 1 | bytes taken: 1 | bytes free: 31
 
   uint var2; // bytes: 32
-  //---------- end of slot 2 | bytes in: 32 | bytes left: 0
+  //---------- end of slot 2 | bytes taken: 32 | bytes free: 0
 
   address var3; // bytes: 20
-  //---------- end of slot 3 | bytes in: 20 | bytes left: 12
+  //---------- end of slot 3 | bytes taken: 20 | bytes free: 12
 
 } // current slot count = 3 | optimized slot count = 2
 

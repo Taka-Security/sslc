@@ -235,7 +235,7 @@ const exec = (args) => {
           let storageSlotByteCount = 0;
           results[contractName][structName].forEach((targetMember) => {
             if (targetMember.varByteSize + storageSlotByteCount > 32) {
-              console.log('  //' + '-'.repeat(10) + ` end of slot ${slotCount} | bytes in: ${storageSlotByteCount} | bytes left: ${32 - storageSlotByteCount}\n`);
+              console.log('  //' + '-'.repeat(10) + ` end of slot ${slotCount} | bytes taken: ${storageSlotByteCount} | bytes free: ${32 - storageSlotByteCount}\n`);
               storageSlotByteCount = targetMember.varByteSize;        
               slotCount += 1;
             } else {
@@ -252,7 +252,7 @@ const exec = (args) => {
               [structName]: { current: slotCount, optimized: optimizedSlotCount } 
             },
           };
-          console.log('  //' + '-'.repeat(10) + ` end of slot ${slotCount} | bytes in: ${storageSlotByteCount} | bytes left: ${32 - storageSlotByteCount}`);
+          console.log('  //' + '-'.repeat(10) + ` end of slot ${slotCount} | bytes taken: ${storageSlotByteCount} | bytes free: ${32 - storageSlotByteCount}`);
           console.log(`\n} // current slot count = ${slotCount} | optimized slot count = ${optimizedSlotCount}\n`);
         });
       });
