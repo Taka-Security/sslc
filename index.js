@@ -98,6 +98,7 @@ class Trie {
 function calcStructStorageSlotCount(structMembers) {
   const byteSizesList = structMembers.map(m => m.varByteSize); // we are only interested in the combinations of variable byte sizes
   const byteSizesListNoBytes32 = byteSizesList.filter(b => b < 32); // we remove 32 byte vars from the list to check
+  if (!byteSizesListNoBytes32.length) return byteSizesList.length;
   const trie = new Trie();
   let bestSlotCount = 99;
   for (const perm of genPermutations(byteSizesListNoBytes32)) { // uses yield
