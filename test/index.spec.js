@@ -57,4 +57,24 @@ describe('sslc', () => {
     });  
     expect(output.join('')).to.equal(fs.readFileSync(path.join(__dirname, 'solidity_files', 'Test5.expected.sol'), 'utf8'));
   });
+  it('should give correct output for Test6.sol', () => {
+    const output = stdout.inspectSync(() => {
+      cli({
+        input_file_paths: [
+          path.join(__dirname, 'solidity_files', 'Test6.sol'),
+        ],
+      });
+    });  
+    expect(output.join('')).to.equal(fs.readFileSync(path.join(__dirname, 'solidity_files', 'Test6.expected.sol'), 'utf8'));
+  });
+  it('should give correct output for Test7.sol', () => {
+    const output = stdout.inspectSync(() => {
+      cli({
+        input_file_paths: [
+          path.join(__dirname, 'solidity_files', 'Test7.sol'),
+        ],
+      });
+    });  
+    expect(output.join('')).to.equal(fs.readFileSync(path.join(__dirname, 'solidity_files', 'Test7.expected.sol'), 'utf8'));
+  });
 });
