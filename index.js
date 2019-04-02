@@ -179,6 +179,10 @@ function exec(args) {
           let varType;
           let varByteSize;
           switch (targetMember.typeName.type) {
+            case 'UserDefinedTypeName':
+              varKind = 'struct';
+              varByteSize = 32;
+              break;
             case 'Mapping':
               varKind = 'mapping';
               varByteSize = 32;
