@@ -75,6 +75,10 @@ struct MySecondStruct { // solidity file: SomeContract.sol
 // -----------------------------
 ```
 
+## Test
+
+`npm test`
+
 ## TODO
 
 ### Optimize memory layout algorithm
