@@ -3,6 +3,8 @@ contract A {
     bool var1;
   }
   struct StructB {
-    StructA var1;
+    uint8 var1;
+    StructA var2;
+    address payable var3;
   }
 }

@@ -2,79 +2,46 @@ const path = require('path');
 const fs = require('fs');
 
 const { expect } = require('chai');
-const { stdout } = require('test-console');
 
 const cli = require('../index');
 
+const TEST_COUNT = 9;
+const TEST_JSON_OUTPUT_PATH = path.join(__dirname, 'test_files', `test.output.json`);
+const TEST_TEXT_OUTPUT_PATH = path.join(__dirname, 'test_files', `test.output.txt`);
+
+const cleanup = filePath => fs.existsSync(filePath) && fs.unlinkSync(filePath)
+
 describe('sslc', () => {
-  it('should give correct output for Test1.sol', () => {
-    const output = stdout.inspectSync(() => {
-      cli({
-        input_file_paths: [
-          path.join(__dirname, 'solidity_files', 'Test1.sol'),
-        ],
-      });
-    });  
-    expect(output.join('')).to.equal(fs.readFileSync(path.join(__dirname, 'solidity_files', 'Test1.expected.sol'), 'utf8'));
+  beforeEach(() => {
+    cleanup(TEST_JSON_OUTPUT_PATH);
+    cleanup(TEST_TEXT_OUTPUT_PATH);
   });
-  it('should give correct output for Test2.sol', () => {
-    const output = stdout.inspectSync(() => {
-      cli({
-        input_file_paths: [
-          path.join(__dirname, 'solidity_files', 'Test2.sol'),
-        ],
-      });
-    });  
-    expect(output.join('')).to.equal(fs.readFileSync(path.join(__dirname, 'solidity_files', 'Test2.expected.sol'), 'utf8'));
+  after(() => {
+    cleanup(TEST_JSON_OUTPUT_PATH);
+    cleanup(TEST_TEXT_OUTPUT_PATH);
   });
-  it('should give correct output for Test3.sol', () => {
-    const output = stdout.inspectSync(() => {
+  for (let test = 1; test <= TEST_COUNT; test += 1) {
+    it(`should give correct output for Test${test}.sol`, () => {
       cli({
-        input_file_paths: [
-          path.join(__dirname, 'solidity_files', 'Test3.sol'),
-        ],
+        solidity_file_paths: [path.join(__dirname, 'test_files', `Test${test}.sol`)],
+        output_json_path: TEST_JSON_OUTPUT_PATH,
+        output_text_path: TEST_TEXT_OUTPUT_PATH,
       });
-    });  
-    expect(output.join('')).to.equal(fs.readFileSync(path.join(__dirname, 'solidity_files', 'Test3.expected.sol'), 'utf8'));
-  });
-  it('should give correct output for Test4.sol', () => {
-    const output = stdout.inspectSync(() => {
-      cli({
-        input_file_paths: [
-          path.join(__dirname, 'solidity_files', 'Test4.sol'),
-        ],
-      });
-    });  
-    expect(output.join('')).to.equal(fs.readFileSync(path.join(__dirname, 'solidity_files', 'Test4.expected.sol'), 'utf8'));
-  });
-  it('should give correct output for Test5.sol', () => {
-    const output = stdout.inspectSync(() => {
-      cli({
-        input_file_paths: [
-          path.join(__dirname, 'solidity_files', 'Test5.sol'),
-        ],
-      });
-    });  
-    expect(output.join('')).to.equal(fs.readFileSync(path.join(__dirname, 'solidity_files', 'Test5.expected.sol'), 'utf8'));
-  });
-  it('should give correct output for Test6.sol', () => {
-    const output = stdout.inspectSync(() => {
-      cli({
-        input_file_paths: [
-          path.join(__dirname, 'solidity_files', 'Test6.sol'),
-        ],
-      });
-    });  
-    expect(output.join('')).to.equal(fs.readFileSync(path.join(__dirname, 'solidity_files', 'Test6.expected.sol'), 'utf8'));
-  });
-  it('should give correct output for Test7.sol', () => {
-    const output = stdout.inspectSync(() => {
-      cli({
-        input_file_paths: [
-          path.join(__dirname, 'solidity_files', 'Test7.sol'),
-        ],
-      });
-    });  
-    expect(output.join('')).to.equal(fs.readFileSync(path.join(__dirname, 'solidity_files', 'Test7.expected.sol'), 'utf8'));
-  });
+    
+      const expectedTextPath = path.join(__dirname, 'test_files', `Test${test}.expected.sol`); // the tool text output uses solidity syntax
+      const expectedJsonPath = path.join(__dirname, 'test_files', `Test${test}.expected.json`);
+      
+      expect(fs.readFileSync(expectedTextPath, 'utf8')).to.equal(fs.readFileSync(TEST_TEXT_OUTPUT_PATH, 'utf8'), 'expected text file does not match actual text output');
+        
+      if (fs.existsSync(expectedJsonPath)) {
+        expect(fs.existsSync(TEST_JSON_OUTPUT_PATH)).to.equal(true, 'expected a json output file but none was generated');
+      }
+      if (fs.existsSync(TEST_JSON_OUTPUT_PATH)) {
+        expect(fs.existsSync(expectedJsonPath)).to.equal(true, 'json output file was generated, but expected none');
+      }
+      if (fs.existsSync(expectedJsonPath)) {
+        expect(fs.readFileSync(expectedJsonPath, 'utf8')).to.equal(fs.readFileSync(TEST_JSON_OUTPUT_PATH, 'utf8'), 'expected json file does not match actual json output');
+      }      
+    });
+  }
 });

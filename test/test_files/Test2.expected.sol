@@ -9,13 +9,12 @@ struct StructA { // file: Test2.sol | contract: A
   address var3; // bytes: 20
   //---------- end of slot 3 | bytes taken: 20 | bytes free: 12
 
-} // current slot count = 3 | optimized slot count = 2
+} // slots that can be saved = 1
 
 // STRUCTS THAT CAN BE OPTIMIZED
 // =============================
 // file: Test2.sol
 // contract: A
 // struct: StructA
-// current num storage slots: 3
-// possible num storage slots: 2
+// slots saved: 1
 // -----------------------------

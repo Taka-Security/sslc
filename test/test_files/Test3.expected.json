@@ -1,0 +1,14 @@
+[
+    {
+        "file": "Test3.sol",
+        "contract": "A",
+        "struct": "StructA",
+        "slotsSaved": 1
+    },
+    {
+        "file": "Test3.sol",
+        "contract": "A",
+        "struct": "StructB",
+        "slotsSaved": 3
+    }
+]

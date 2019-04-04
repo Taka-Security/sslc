@@ -6,7 +6,7 @@ struct StructA { // file: Test1.sol | contract: A
   address var2; // bytes: 20
   //---------- end of slot 2 | bytes taken: 20 | bytes free: 12
 
-} // current slot count = 2 | optimized slot count = 2
+} // slots that can be saved = 0
 
 // STRUCTS THAT CAN BE OPTIMIZED
 // =============================

@@ -3,7 +3,7 @@ struct StructA { // file: Test6.sol | contract: A
   bool var1; // bytes: 1
   //---------- end of slot 1 | bytes taken: 1 | bytes free: 31
 
-} // current slot count = 1 | optimized slot count = 1
+} // slots that can be saved = 0
 
 struct StructB { // file: Test6.sol | contract: A
 
@@ -13,8 +13,15 @@ struct StructB { // file: Test6.sol | contract: A
   StructA var2; // bytes: 32
   //---------- end of slot 2 | bytes taken: 32 | bytes free: 0
 
-} // current slot count = 2 | optimized slot count = 2
+  address payable var3; // bytes: 20
+  //---------- end of slot 3 | bytes taken: 20 | bytes free: 12
+
+} // slots that can be saved = 1
 
 // STRUCTS THAT CAN BE OPTIMIZED
 // =============================
-// All structs seem to be efficiently laid out in memory
+// file: Test6.sol
+// contract: A
+// struct: StructB
+// slots saved: 1
+// -----------------------------

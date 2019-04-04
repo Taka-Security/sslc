@@ -1,0 +1,8 @@
+[
+    {
+        "file": "Test5.sol",
+        "contract": "A",
+        "struct": "StructA",
+        "slotsSaved": 1
+    }
+]
