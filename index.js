@@ -179,7 +179,7 @@ function gatherCliArgs() {
   const argParser = new ArgumentParser({
     version: '0.0.1',
     addHelp: true,
-    description: 'Solidity struct layout checker',
+    description: 'Solidity storage layout checker',
   });
 
   argParser.addArgument(
