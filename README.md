@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/npm/v/sslc.svg?style=flat-square&label=version)](https://www.npmjs.com/package/sslc)
 ![Download](https://img.shields.io/npm/dt/sslc.svg)
 
-Given some Solidity smart contract(s), extract all structs and check if their members could be laid out more efficient (=take less storage slots).
+Given some Solidity smart contract(s), extract all structs and check if their members could be laid out more efficient (=occupy less storage slots).
 
 ## Dependencies
 
