@@ -40,7 +40,10 @@ sslc -f ~/my-solidity-project/contracts/*.sol
 
 ## Output
 
-The script will output a single Solidity file to stdout. Example output:
+The script will print text output using Solidity syntax to stdout. 
+It is also possible to save the text output to a file or save JSON output to a file.
+
+#### Text output
 
 ```Solidity
 struct MyFirstStruct { // file: SomeContract.sol | contract: SomeContract
@@ -97,6 +100,25 @@ struct MyOtherStruct { // file: SomeOtherContract.sol | contract: SomeOtherContr
 // struct: MyParentStruct
 // slots saved: 1
 // -----------------------------
+```
+
+#### JSON output
+
+```json
+[
+    {
+        "file": "SomeContract.sol",
+        "contract": "SomeContract",
+        "struct": "MyFirstStruct",
+        "slotsSaved": 2
+    },
+    {
+        "file": "SomeOtherContract.sol",
+        "contract": "ParentContract",
+        "struct": "MyParentStruct",
+        "slotsSaved": 1
+    }
+]
 ```
 
 ## Test
