@@ -1,6 +1,6 @@
 # sslc
 
-**|S|**olidity **|S|**truct **|L|**ayout **|C|**hecker
+**S**olidity **S**truct **L**ayout **C**hecker
 
 ![License](https://img.shields.io/github/license/rmi7/sslc.svg?style=flat-square)
 [![Version](https://img.shields.io/npm/v/sslc.svg?style=flat-square&label=version)](https://www.npmjs.com/package/sslc)
