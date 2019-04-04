@@ -194,17 +194,6 @@ function gatherCliArgs() {
   );
 
   argParser.addArgument(
-    '--only-last',
-    {
-      type: Boolean,
-      defaultValue: false,
-      help: 'use only last contract in input file',
-      dest: 'only_last_contract',
-      action: 'storeTrue',
-    },
-  );
-  
-  argParser.addArgument(
     '-oj',
     {
       help: 'write output to JSON file',
@@ -230,15 +219,16 @@ function exec(args) {
   const inefficientStructs = {};
 
   let text = '';
-  const textOutput = txt => args.output_text_path ? text += `${txt}\n` : console.log(txt);
+  const textOutput = txt => {
+    if (args.output_text_path) text += `${txt}\n`;
+    console.log(txt);
+  };
 
   args.solidity_file_paths.forEach((solidity_file_path) => {    
     const uniqueFileName = solidity_file_path.replace(sharedPath, '');
     const input = fs.readFileSync(solidity_file_path, 'utf8');
     const ast = solidityParser.parse(input, { loc: true });
-    const structs = args.only_last_contract
-      ? ast.children[ast.children.length - 1].subNodes.filter(n => n.type === 'StructDefinition').map(n => ({ contract: ast.children[ast.children.length - 1].name, ...n }))
-      : ast.children.filter(child => child.type === 'ContractDefinition')
+    const structs = ast.children.filter(child => child.type === 'ContractDefinition')
                     .map(child => child.subNodes.filter(n => n.type === 'StructDefinition').map(n => ({ contract: child.name, ...n })))
                     .flat();
     
