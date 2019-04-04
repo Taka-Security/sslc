@@ -1,4 +1,4 @@
-# **S**olidity **S**truct **L**ayout **C**hecker
+# **S**olidity **S**torage **L**ayout **C**hecker
 
 ![License](https://img.shields.io/github/license/rmi7/sslc.svg?style=flat-square)
 [![Version](https://img.shields.io/npm/v/sslc.svg?style=flat-square&label=version)](https://www.npmjs.com/package/sslc)
@@ -15,7 +15,7 @@ Makes use of [solidity-parser-antlr](https://github.com/federicobond/solidity-pa
 ```
 usage: sslc [-h] [-v] -f path [path ...] [-oj path] [-ot path]
 
-Solidity struct layout checker
+Solidity storage layout checker
 
 Optional arguments:
   -h, --help          Show this help message and exit.
@@ -124,6 +124,10 @@ struct MyOtherStruct { // file: SomeOtherContract.sol | contract: SomeOtherContr
 ## Test
 
 `npm test`
+
+## TODO
+
+- do the same for the layout of variables of a given contract
 
 ## License
 
