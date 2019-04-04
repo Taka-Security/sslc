@@ -1,0 +1,18 @@
+[
+    {
+        "file": "Test7.sol",
+        "contract": "A",
+        "struct": "StructA",
+        "currentSlots": 5,
+        "optimizedSlots": 4,
+        "numSlotsSaved": 1
+    },
+    {
+        "file": "Test7.sol",
+        "contract": "A",
+        "struct": "StructB",
+        "currentSlots": 6,
+        "optimizedSlots": 5,
+        "numSlotsSaved": 1
+    }
+]

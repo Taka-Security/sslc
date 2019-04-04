@@ -1,0 +1,10 @@
+[
+    {
+        "file": "Test2.sol",
+        "contract": "A",
+        "struct": "StructA",
+        "currentSlots": 3,
+        "optimizedSlots": 2,
+        "numSlotsSaved": 1
+    }
+]
