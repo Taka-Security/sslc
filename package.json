@@ -2,7 +2,7 @@
   "name": "sslc",
   "version": "0.1.8",
   "bin": "index.js",
-  "description": "cli tool to check Solidity struct memory layout for inefficiencies",
+  "description": "cli tool to check Solidity storage memory layout of structs for inefficiencies",
   "keywords": [
     "memory",
     "solidity",
