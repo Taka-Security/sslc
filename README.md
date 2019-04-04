@@ -15,7 +15,7 @@ Makes use of [solidity-parser-antlr](https://github.com/federicobond/solidity-pa
 ## Usage
 
 ```
-usage: sslc [-h] [-v] -f path [path ...] [--only-last]
+usage: index.js [-h] [-v] -f path [path ...] [-oj path] [-ot path]
 
 Solidity struct layout checker
 
@@ -23,7 +23,8 @@ Optional arguments:
   -h, --help          Show this help message and exit.
   -v, --version       Show program's version number and exit.
   -f path [path ...]  input solidity file(s), supports glob
-  --only-last         use only last contract in input file
+  -oj path            write output to JSON file
+  -ot path            write output to text file
 ```
 
 #### without install
@@ -41,7 +42,7 @@ sslc -f ~/my-solidity-project/contracts/*.sol
 
 ## Output
 
-The output will be a single Solidity file printed to stdout. Example output:
+The script will output a single Solidity file to stdout. Example output:
 
 ```Solidity
 struct MyFirstStruct { // file: SomeContract.sol | contract: SomeContract
@@ -61,7 +62,7 @@ struct MyFirstStruct { // file: SomeContract.sol | contract: SomeContract
   bool myFourthVar; // bytes: 1
   //---------- end of slot 5 | bytes taken: 1 | bytes free: 31
  
-} // current slot count = 5 | optimized slot count = 3
+} // slots that can be saved = 2
 
 struct MyParentStruct { // file: SomeOtherContract.sol | contract: ParentContract
 
@@ -74,7 +75,7 @@ struct MyParentStruct { // file: SomeOtherContract.sol | contract: ParentContrac
   uint16 myThirdVar; // bytes: 2
   //---------- end of slot 3 | bytes taken: 2 | bytes free: 30
   
-} // current slot count = 3 | optimized slot count = 2
+} // slots that can be saved = 1
 
 struct MyOtherStruct { // file: SomeOtherContract.sol | contract: SomeOtherContract
 
@@ -84,21 +85,19 @@ struct MyOtherStruct { // file: SomeOtherContract.sol | contract: SomeOtherContr
   address mySecondVar; // bytes: 20
   //---------- end of slot 2 | bytes taken: 20 | bytes free: 12
  
-} // current slot count = 2 | optimized slot count = 2
+} // slots that can be saved = 0
 
 // STRUCTS THAT CAN BE OPTIMIZED
 // =============================
 // file: SomeContract.sol
 // contract: SomeContract
 // struct: MyFirstStruct
-// current num storage slots: 5
-// possible num storage slots: 3
+// slots saved: 2
 // -----------------------------
 // file: SomeOtherContract.sol
 // contract: ParentContract
 // struct: MyParentStruct
-// current num storage slots: 3
-// possible num storage slots: 2
+// slots saved: 1
 // -----------------------------
 ```
 
