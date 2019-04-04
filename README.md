@@ -1,12 +1,12 @@
 # sslc
 
-**s**olidity **s**truct **l**ayout **c**hecker
+**|S|**olidity **|S|**truct **|L|**ayout **|C|**hecker
 
 ![License](https://img.shields.io/github/license/rmi7/sslc.svg?style=flat-square)
 [![Version](https://img.shields.io/npm/v/sslc.svg?style=flat-square&label=version)](https://www.npmjs.com/package/sslc)
 ![Download](https://img.shields.io/npm/dt/sslc.svg)
 
-Given some Solidity smart contract(s), extract all structs and check if their members could be laid out more efficient (= take less storage slots).
+Given some Solidity smart contract(s), extract all structs and check if their members could be laid out more efficient (=take less storage slots).
 
 ## Dependencies
 
@@ -15,7 +15,7 @@ Makes use of [solidity-parser-antlr](https://github.com/federicobond/solidity-pa
 ## Usage
 
 ```
-usage: index.js [-h] [-v] -f path [path ...] [-oj path] [-ot path]
+usage: sslc [-h] [-v] -f path [path ...] [-oj path] [-ot path]
 
 Solidity struct layout checker
 
