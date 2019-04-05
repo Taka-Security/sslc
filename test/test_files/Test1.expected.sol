@@ -1,10 +1,10 @@
 struct StructA { // file: Test1.sol | contract: A
 
   uint var1; // bytes: 32
-  //---------- end of slot 1 | bytes taken: 32 | bytes free: 0
+  //---------- end of slot | bytes taken: 32 | bytes free: 0
 
   address var2; // bytes: 20
-  //---------- end of slot 2 | bytes taken: 20 | bytes free: 12
+  //---------- end of slot | bytes taken: 20 | bytes free: 12
 
 } // slots that can be saved = 0
 

@@ -298,7 +298,7 @@ function exec(args) {
         let storageSlotByteCount = 0;
         parsedStructs[contractName][structName].forEach((targetMember) => {
           if (targetMember.varByteSize + storageSlotByteCount > 32) {
-            textOutput('  //' + '-'.repeat(10) + ` end of slot ${slotCount} | bytes taken: ${storageSlotByteCount} | bytes free: ${32 - storageSlotByteCount}\n`);
+            textOutput('  //' + '-'.repeat(10) + ` end of slot | bytes taken: ${storageSlotByteCount} | bytes free: ${32 - storageSlotByteCount}\n`);
             storageSlotByteCount = targetMember.varByteSize;        
             slotCount += 1;
           } else {
@@ -316,7 +316,7 @@ function exec(args) {
             [structName]: { current: slotCount, optimized: optimizedSlotCount } 
           },
         };
-        textOutput('  //' + '-'.repeat(10) + ` end of slot ${slotCount} | bytes taken: ${storageSlotByteCount} | bytes free: ${32 - storageSlotByteCount}`);
+        textOutput('  //' + '-'.repeat(10) + ` end of slot | bytes taken: ${storageSlotByteCount} | bytes free: ${32 - storageSlotByteCount}`);
         textOutput(`\n} // slots that can be saved = ${slotCount - optimizedSlotCount}\n`);
       });
     });

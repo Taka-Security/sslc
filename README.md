@@ -49,42 +49,42 @@ It is also possible to save the text output to a file or save JSON output to a f
 struct MyFirstStruct { // file: SomeContract.sol | contract: SomeContract
 
   uint8 myFirstVar; // bytes: 1
-  //---------- end of slot 1 | bytes taken: 1 | bytes free: 31
+  //---------- end of slot | bytes taken: 1 | bytes free: 31
   
   bytes32[] mySecondVar; // bytes: 32
-  //---------- end of slot 2 | bytes taken: 32 | bytes free: 0
+  //---------- end of slot | bytes taken: 32 | bytes free: 0
   
   bool myThirdVar; // bytes: 1
-  //---------- end of slot 3 | bytes taken: 1 | bytes free: 31
+  //---------- end of slot | bytes taken: 1 | bytes free: 31
   
   uint256 myFourthVar; // bytes: 32
-  //---------- end of slot 4 | bytes taken: 32 | bytes free: 0
+  //---------- end of slot | bytes taken: 32 | bytes free: 0
   
   bool myFourthVar; // bytes: 1
-  //---------- end of slot 5 | bytes taken: 1 | bytes free: 31
+  //---------- end of slot | bytes taken: 1 | bytes free: 31
  
 } // slots that can be saved = 2
 
 struct MyParentStruct { // file: SomeOtherContract.sol | contract: ParentContract
 
   uint8 myFirstVar; // bytes: 1
-  //---------- end of slot 1 | bytes taken: 1 | bytes free: 31
+  //---------- end of slot | bytes taken: 1 | bytes free: 31
   
   uint256 mySecondVar; // bytes: 32
-  //---------- end of slot 2 | bytes taken: 32 | bytes free: 0
+  //---------- end of slot | bytes taken: 32 | bytes free: 0
   
   uint16 myThirdVar; // bytes: 2
-  //---------- end of slot 3 | bytes taken: 2 | bytes free: 30
+  //---------- end of slot | bytes taken: 2 | bytes free: 30
   
 } // slots that can be saved = 1
 
 struct MyOtherStruct { // file: SomeOtherContract.sol | contract: SomeOtherContract
 
   uint256 myFirstVar; // bytes: 32
-  //---------- end of slot 1 | bytes taken: 32 | bytes free: 0
+  //---------- end of slot | bytes taken: 32 | bytes free: 0
   
   address mySecondVar; // bytes: 20
-  //---------- end of slot 2 | bytes taken: 20 | bytes free: 12
+  //---------- end of slot | bytes taken: 20 | bytes free: 12
  
 } // slots that can be saved = 0
 
