@@ -214,6 +214,11 @@ function gatherCliArgs() {
   return argParser.parseArgs();
 };
 
+// source: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/flat#Browser_compatibility
+function flattenDeep(arr1) {
+   return arr1.reduce((acc, val) => Array.isArray(val) ? acc.concat(flattenDeep(val)) : acc.concat(val), []);
+}
+
 function exec(args) {
   const sharedPath = extractSharedStart(args.solidity_file_paths);
   const inefficientStructs = {};
@@ -228,9 +233,8 @@ function exec(args) {
     const uniqueFileName = solidity_file_path.replace(sharedPath, '');
     const input = fs.readFileSync(solidity_file_path, 'utf8');
     const ast = solidityParser.parse(input, { loc: true });
-    const structs = ast.children.filter(child => child.type === 'ContractDefinition')
-                    .map(child => child.subNodes.filter(n => n.type === 'StructDefinition').map(n => ({ contract: child.name, ...n })))
-                    .flat();
+    const structs = flattenDeep(ast.children.filter(child => child.type === 'ContractDefinition')
+                    .map(child => child.subNodes.filter(n => n.type === 'StructDefinition').map(n => ({ contract: child.name, ...n }))));
     
     const parsedStructs = structs.reduce((memo, targetStruct) => {
       const structMembers = targetStruct.members.map((targetMember) => {
