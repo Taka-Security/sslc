@@ -3,6 +3,7 @@
         "file": "Test8.sol",
         "contract": "A",
         "struct": "StructB",
-        "slotsSaved": 4
+        "slotsSaved": 3,
+        "timedout": false
     }
 ]

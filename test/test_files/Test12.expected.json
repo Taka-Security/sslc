@@ -1,0 +1,9 @@
+[
+    {
+        "file": "Test12.sol",
+        "contract": "A",
+        "struct": "StructB_trigger_timeout",
+        "slotsSaved": 5,
+        "timedout": true
+    }
+]

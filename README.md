@@ -6,6 +6,14 @@
 
 Given some Solidity smart contract(s), extract all structs and check if their members could be laid out more efficient (=occupy less storage slots).
 
+#### Timeout
+
+If the number of struct members is sufficiently high, the algorithm to find the most efficient layout 
+will run "indefinitely". To guard against this, there is a default 10 second timeout to calculate 
+the most efficient layout of any given struct. If the timeout is exceeded the calculation will exit and 
+give the "current best slot count" as well as info that the timeout was reached. This timeout can be 
+customized using the `-t <secs>` argument.
+
 ## Dependencies
 
 Makes use of [solidity-parser-antlr](https://github.com/federicobond/solidity-parser-antlr) to parse Solidity files.
@@ -23,6 +31,7 @@ Optional arguments:
   -f path [path ...]  input solidity file(s), supports glob
   -oj path            write output to JSON file
   -ot path            write output to text file
+  -t secs             brute force timeout, default 10s
 ```
 
 #### without install
@@ -41,7 +50,7 @@ sslc -f ~/my-solidity-project/contracts/*.sol
 ## Output
 
 The script will print text output using Solidity syntax to stdout. 
-It is also possible to save the text output to a file or save JSON output to a file.
+It is also possible to save the text output to a file and/or save JSON output to a file.
 
 #### Text output
 
@@ -110,13 +119,15 @@ struct MyOtherStruct { // file: SomeOtherContract.sol | contract: SomeOtherContr
         "file": "SomeContract.sol",
         "contract": "SomeContract",
         "struct": "MyFirstStruct",
-        "slotsSaved": 2
+        "slotsSaved": 2,
+        "timedout": false
     },
     {
         "file": "SomeOtherContract.sol",
         "contract": "ParentContract",
         "struct": "MyParentStruct",
-        "slotsSaved": 1
+        "slotsSaved": 1,
+        "timedout": false
     }
 ]
 ```

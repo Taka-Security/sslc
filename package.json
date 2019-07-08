@@ -33,6 +33,6 @@
     "mocha": "^6.0.2"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha -t 0"
   }
 }

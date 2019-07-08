@@ -1,4 +1,4 @@
-struct StructB { // file: Test8.sol | contract: A
+struct StructB_return_full { // file: Test10.sol | contract: A
 
   bytes12 var1; // bytes: 12
   uint160 var2; // bytes: 20
@@ -23,32 +23,14 @@ struct StructB { // file: Test8.sol | contract: A
   //---------- end of slot | bytes taken: 23 | bytes free: 9
 
   bytes16 var9; // bytes: 16
-  bytes15 var10; // bytes: 15
-  //---------- end of slot | bytes taken: 31 | bytes free: 1
+  //---------- end of slot | bytes taken: 16 | bytes free: 16
 
-  bytes17 var11; // bytes: 17
-  //---------- end of slot | bytes taken: 17 | bytes free: 15
-
-  bytes21 var12; // bytes: 21
-  uint8 var13; // bytes: 1
-  uint64 var14; // bytes: 8
-  //---------- end of slot | bytes taken: 30 | bytes free: 2
-
-  uint88 var15; // bytes: 11
-  uint96 var16; // bytes: 12
-  //---------- end of slot | bytes taken: 23 | bytes free: 9
-
-  uint96 var17; // bytes: 12
-  bool var18; // bytes: 1
-  bool var19; // bytes: 1
-  //---------- end of slot | bytes taken: 14 | bytes free: 18
-
-} // slots that can be saved = 3
+} // slots that can be saved = 2
 
 // STRUCTS THAT CAN BE OPTIMIZED
 // =============================
-// file: Test8.sol
+// file: Test10.sol
 // contract: A
-// struct: StructB
-// slots saved: 3
+// struct: StructB_return_full
+// slots saved: 2
 // -----------------------------

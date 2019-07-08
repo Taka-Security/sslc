@@ -3,12 +3,14 @@
         "file": "Test7.sol",
         "contract": "A",
         "struct": "StructA",
-        "slotsSaved": 1
+        "slotsSaved": 1,
+        "timedout": false
     },
     {
         "file": "Test7.sol",
         "contract": "A",
         "struct": "StructB",
-        "slotsSaved": 1
+        "slotsSaved": 1,
+        "timedout": false
     }
 ]

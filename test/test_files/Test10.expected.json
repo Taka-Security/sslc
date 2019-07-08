@@ -1,0 +1,9 @@
+[
+    {
+        "file": "Test10.sol",
+        "contract": "A",
+        "struct": "StructB_return_full",
+        "slotsSaved": 2,
+        "timedout": false
+    }
+]

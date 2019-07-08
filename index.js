@@ -10,6 +10,8 @@ const uintRegex = /uint(\d+)/m;
 const intRegex = /int(\d+)/m;
 const bytesRegex = /bytes(\d+)/m;
 
+const DEFAULT_BRUTE_FORCE_TIMEOUT = 10; // seconds
+
 // source: https://stackoverflow.com/a/37580979
 function* genPermutations(permutation) {
   var length = permutation.length,
@@ -95,67 +97,71 @@ class Trie {
   }
 }
 
-function calcStructStorageSlotCount(structMembers) {
+function calcMostEfficientLayout(list, bruteforceTimeout) {
   let currentSlotCount = 0;
-  const byteSizesList = structMembers.map(m => m.varByteSize).sort((a, b) => b - a); // we are only interested in the combinations of variable byte sizes
   
-  // remove all variables of byte size 32 from the list to brute force
-  let byteSizesList32OrHigher = byteSizesList.filter(b => b >= 32); // we remove 32 or more byte vars from the list to check
-  byteSizesList32OrHigher.forEach(b => currentSlotCount += b / 32);
-  let byteSizesListToDo = byteSizesList.filter(b => b < 32);
+  list = list.slice().sort((a, b) => b - a);
+  for (let i = 0; i < list.length;) {
+    const item = list[i];
+    
+    // extract values which are 32 bytes
+    if (item === 32) {
+      currentSlotCount += 1;
+      list.splice(i, 1);
+      continue;
+    }
   
-  // if all variables are 32 bytes
-  if (!byteSizesListToDo.length) return currentSlotCount;
-  
-  // find all pairs that together make up 32 bytes
-  let byteSizesListPairs = [];
-  const used = {};
-  for (let i = 0; i < byteSizesListToDo.length; i += 1) {
-    if (used[i]) continue;
-    for (let j = 0; j < byteSizesListToDo.length; j += 1) {
-      if (used[i]) break;
-      if (i == j || used[j]) continue;
-      if (byteSizesListToDo[i] + byteSizesListToDo[j] === 32) {
-        byteSizesListPairs.push(byteSizesListToDo[i], byteSizesListToDo[j]);
-        used[i] = true;
-        used[j] = true;
+    // extract pairs of values which together are 32 bytes
+    let found_pair = false;
+    for (let j = i + 1; j < list.length;) {
+      const item_compare = list[j];
+      if ((item + item_compare) == 32) {
+        found_pair = true;
+        // currentSlotCount += 1;
+        list.splice(j, 1);
         break;
       }
+      j += 1;
     }
-  }
-  if (byteSizesListPairs.length) {
-    // increment slots by 1 for each pair
-    currentSlotCount += byteSizesListPairs.length / 2;
+    if (found_pair) {
+      list.splice(i, 1);
+      currentSlotCount += 1;
+      continue;
+    }
   
-    // remove found pairs from the list to do
-    for (let i = 0; i < byteSizesListPairs.length; i++) {
-      for (let j = 0; j < byteSizesListToDo.length;) {
-        if (byteSizesListPairs[i] === byteSizesListToDo[j]) {
-          byteSizesListToDo.splice(j, 1);
-        } else {
-          j++;
-        }
-      }
-    }
+    i += 1;
   }
   
-  // if all remaining variables together made 32 byte pairs
-  if (!byteSizesListToDo.length) return currentSlotCount;
+  if (!list.length) return { timedout: false, bestSlotCount: currentSlotCount };
+  
+  // sum all of the remaining variables
+  const leftoverBytes = list.reduce((m, x) => m += x, 0);
+  
+  // if what's left over is less than or equal to 32 bytes (=1 slot)
+  if (leftoverBytes <= 32) return { timedout: false, bestSlotCount: currentSlotCount + 1 };
+  
+  const bestPossibleSlotCount = Math.ceil(leftoverBytes / 32);
   
   // brute-force the remaining items
   let bestSlotCount = 99;
   const trie = new Trie();
-  
   // use a generator to efficiently get 1 permutation on each iteration of the loop
-  for (const perm of genPermutations(byteSizesListToDo)) {
+  const now = Date.now();
+  
+  const timeoutAt = now + bruteforceTimeout * 1000;
+  for (const perm of genPermutations(list)) {
+    if (Date.now() > timeoutAt) {
+      return { timedout: true, bestSlotCount: currentSlotCount + bestSlotCount }; // indicate timeout was triggered
+    }
+    
     // we store already dealt with permutations in a Trie
     if (trie.contains(perm)) continue;
     trie.insert(perm); 
-    
+
     // go through each permutation and check if it's more efficient than the currnet (best) permutation
     let slotCount = 1;
     let slotBytesUsed = 0; // 1 slot == 32 bytes
-    const exitEarly = perm.some((varByteSize) => {
+    const slotCounTooHigh = perm.some((varByteSize) => {
       // by using array.some we can 'break' out of the loop by returning a truthy value
       if (slotCount >= bestSlotCount) return true;
       if (slotBytesUsed + varByteSize > 32) {
@@ -165,13 +171,23 @@ function calcStructStorageSlotCount(structMembers) {
       } else { 
         // new variable can be packed in the current storage slot, no need for extra storage slot
         slotBytesUsed += varByteSize;
+        if (slotBytesUsed == 32) {
+          slotCount += 1;
+          slotBytesUsed = 0;
+        }
       }
     });
+    
     // if we exit earl, it cannot be a better slot count
-    if (!exitEarly && slotCount < bestSlotCount) bestSlotCount = slotCount;
+    if (!slotCounTooHigh && slotCount < bestSlotCount) {
+      bestSlotCount = slotCount;
+      if (bestSlotCount === bestPossibleSlotCount) { // return early if possible
+        return { timedout: false, bestSlotCount: currentSlotCount + bestSlotCount };
+      }
+    }
   }
-  
-  return currentSlotCount + bestSlotCount;
+  // we looped through all possibilities, and found the best result to be:
+  return { timedout: false, bestSlotCount: currentSlotCount + bestSlotCount} ;
 };
 
 
@@ -210,6 +226,17 @@ function gatherCliArgs() {
       metavar: 'path',
     },
   );
+  
+  argParser.addArgument(
+    '-t',
+    {
+      help: 'brute force timeout',
+      dest: 'bruteforce_timeout',
+      metavar: 'secs',
+      default: DEFAULT_BRUTE_FORCE_TIMEOUT,
+      required: true,
+    },
+  );
 
   return argParser.parseArgs();
 };
@@ -219,7 +246,16 @@ function flattenDeep(arr1) {
    return arr1.reduce((acc, val) => Array.isArray(val) ? acc.concat(flattenDeep(val)) : acc.concat(val), []);
 }
 
+function getEnumByteSize(memberCount) {
+  if (memberCount <= 255) return 1;
+  if (memberCount <= 65535) return 2;
+  if (memberCount <= 16777216) return 3;
+  if (memberCount <= 4294967295) return 4;
+  throw new Error(`a struct cannot have this high number (${memberCount}) of members, it will exceed the block gas limit`);
+}
+
 function exec(args) {
+  if (!args.bruteforce_timeout) args.bruteforce_timeout = DEFAULT_BRUTE_FORCE_TIMEOUT;
   const sharedPath = extractSharedStart(args.solidity_file_paths);
   const inefficientStructs = {};
 
@@ -229,12 +265,17 @@ function exec(args) {
     console.log(txt);
   };
 
+  let bruteforceTimedOut = false;
+  
   args.solidity_file_paths.forEach((solidity_file_path) => {    
     const uniqueFileName = solidity_file_path.replace(sharedPath, '');
     const input = fs.readFileSync(solidity_file_path, 'utf8');
     const ast = solidityParser.parse(input, { loc: true });
     const structs = flattenDeep(ast.children.filter(child => child.type === 'ContractDefinition')
                     .map(child => child.subNodes.filter(n => n.type === 'StructDefinition').map(n => ({ contract: child.name, ...n }))));
+    
+    const enums = flattenDeep(ast.children.filter(child => child.type === 'ContractDefinition')
+                    .map(child => child.subNodes.filter(n => n.type === 'EnumDefinition').map(n => ({ contract: child.name, ...n }))));
     
     const parsedStructs = structs.reduce((memo, targetStruct) => {
       const structMembers = targetStruct.members.map((targetMember) => {
@@ -244,8 +285,17 @@ function exec(args) {
         let varType;
         let varByteSize;
         let varNestedStructName;
+    
         switch (targetMember.typeName.type) {
           case 'UserDefinedTypeName':
+            if (enums.length) {
+              const foundEnum = enums.find(_enum => _enum.name === targetMember.typeName.namePath);
+              if (foundEnum) {
+                varKind = 'enum';
+                varByteSize = getEnumByteSize(foundEnum.members.length);
+                break;
+              }
+            }
             varKind = 'struct';
             varByteSize = 32;
             break;
@@ -293,35 +343,49 @@ function exec(args) {
           [targetStruct.name]: structMembers
         }
       };
-    }, {});
+    }, {});    
     
     Object.keys(parsedStructs).forEach((contractName) => {
-      Object.keys(parsedStructs[contractName]).forEach((structName) => {
+      Object.keys(parsedStructs[contractName]).forEach((structName) => {  
         textOutput(`struct ${structName} { // file: ${uniqueFileName} | contract: ${contractName}\n`);
-        let slotCount = 1;
-        let storageSlotByteCount = 0;
-        parsedStructs[contractName][structName].forEach((targetMember) => {
-          if (targetMember.varByteSize + storageSlotByteCount > 32) {
-            textOutput('  //' + '-'.repeat(10) + ` end of slot | bytes taken: ${storageSlotByteCount} | bytes free: ${32 - storageSlotByteCount}\n`);
-            storageSlotByteCount = targetMember.varByteSize;        
-            slotCount += 1;
-          } else {
-            storageSlotByteCount += targetMember.varByteSize;
+        let slotsFilledCount = 1;
+        let bytesOccupiedInSlot = 0;
+        parsedStructs[contractName][structName].forEach((targetMember) => {    
+          const newMemberSize = targetMember.varByteSize;
+          if (newMemberSize + bytesOccupiedInSlot > 32) {      
+            textOutput('  //' + '-'.repeat(10) + ` end of slot | bytes taken: ${bytesOccupiedInSlot} | bytes free: ${32 - bytesOccupiedInSlot}\n`);
+            bytesOccupiedInSlot = newMemberSize;        
+            slotsFilledCount += 1;      
+          } else {      
+            bytesOccupiedInSlot += newMemberSize;      
           }
-          textOutput(`  ${input.split('\n')[targetMember.varLine].replace(/\/\/.+/, '').trim()} // bytes: ${targetMember.varByteSize}`);
+          textOutput(`  ${input.split('\n')[targetMember.varLine].replace(/\/\/.+/, '').trim()} // bytes: ${newMemberSize}`);
         });
-        const totalBytesTaken = (slotCount - 1) * 8 + storageSlotByteCount;
         
-        const optimizedSlotCount = calcStructStorageSlotCount(parsedStructs[contractName][structName].slice().sort((a, b) => a.varByteSize - b.varByteSize));
+        const originalSlotsTaken = slotsFilledCount;
+          
+        const totalBytesTaken = (slotsFilledCount - 1) * 8 + bytesOccupiedInSlot;
+        
+        // will try and get the most efficient layout, or timeout after x seconds and report best found until then
+        const calcResult = calcMostEfficientLayout(parsedStructs[contractName][structName].map(x => x.varByteSize), args.bruteforce_timeout);    
+        
+        const optimizedSlotsTaken = calcResult.bestSlotCount;
+        bruteforceTimedOut = calcResult.timedout;
+        
         inefficientStructs[uniqueFileName] = { 
           ...inefficientStructs[uniqueFileName],
           [contractName]: { 
             ...(inefficientStructs[uniqueFileName] ? inefficientStructs[uniqueFileName][contractName] : {}),
-            [structName]: { current: slotCount, optimized: optimizedSlotCount } 
+            [structName]: { current: slotsFilledCount, optimized: optimizedSlotsTaken, timedout: calcResult.timedout } 
           },
         };
-        textOutput('  //' + '-'.repeat(10) + ` end of slot | bytes taken: ${storageSlotByteCount} | bytes free: ${32 - storageSlotByteCount}`);
-        textOutput(`\n} // slots that can be saved = ${slotCount - optimizedSlotCount}\n`);
+          
+        textOutput('  //' + '-'.repeat(10) + ` end of slot | bytes taken: ${bytesOccupiedInSlot} | bytes free: ${32 - bytesOccupiedInSlot}`);
+        if (calcResult.timedout) {
+          textOutput(`\n} // calculating most efficient layout timed out after ${args.bruteforce_timeout} seconds`);
+          textOutput(`  // best found result before timeout: slots that can be saved = ${slotsFilledCount - optimizedSlotsTaken}\n`);    
+        }
+        textOutput(`\n} // slots that can be saved = ${slotsFilledCount - optimizedSlotsTaken}\n`);  
       });
     });
   });
@@ -341,7 +405,13 @@ function exec(args) {
           textOutput(`// file: ${inputFilePath}`);
           textOutput(`// contract: ${contractName}`);
           textOutput(`// struct: ${structName}`);
-          textOutput(`// slots saved: ${structSummary.current - structSummary.optimized}`);
+          if (bruteforceTimedOut) {
+            textOutput(`// timed out: yes, after ${args.bruteforce_timeout}s`);
+            textOutput(`// best found slots saved: ${structSummary.current - structSummary.optimized}`);
+          } else {
+            textOutput(`// slots saved: ${structSummary.current - structSummary.optimized}`);
+          }
+          
           textOutput('// -----------------------------');
           if (args.output_json_path) {
             jsonOutput.push({
@@ -349,6 +419,7 @@ function exec(args) {
               contract: contractName,
               struct: structName,              
               slotsSaved: structSummary.current - structSummary.optimized, 
+              timedout: bruteforceTimedOut,
             });
           }
         }
