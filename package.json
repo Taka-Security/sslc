@@ -1,6 +1,6 @@
 {
   "name": "sslc",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "bin": "index.js",
   "description": "cli tool to check Solidity storage memory layout of structs for inefficiencies",
   "keywords": [
