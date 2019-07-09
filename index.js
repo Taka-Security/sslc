@@ -234,7 +234,6 @@ function gatherCliArgs() {
       dest: 'bruteforce_timeout',
       metavar: 'secs',
       default: DEFAULT_BRUTE_FORCE_TIMEOUT,
-      required: true,
     },
   );
 
